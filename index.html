@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Recommendation App</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent; /* Disable the tap color */
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f7f7f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Container to simulate the mobile phone screen */
+        .phone-container {
+            width: 375px; /* Common iPhone width */
+            height: 812px; /* Common iPhone height */
+            background-color: white;
+            border-radius: 40px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 8px solid #333; /* Simulate a bezel */
+        }
+
+        /* Top Status Bar (just visual, non-functional) */
+        .status-bar {
+            height: 44px;
+            background-color: white;
+            padding: 0 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .status-bar-icons {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        /* Header (Back, Title, Menu) */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+        .back-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            font-size: 1.2rem;
+            color: #333;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .app-title {
+            font-size: 20px;
+            font-weight: 600;
+            flex-grow: 1;
+            text-align: center;
+        }
+        .menu-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-end;
+            padding: 10px;
+        }
+        .menu-bar {
+            width: 20px;
+            height: 2px;
+            background-color: #333;
+            margin-bottom: 4px;
+            transition: 0.3s;
+        }
+        .menu-bar:last-child {
+            margin-bottom: 0;
+            width: 14px; /* Shorter last bar */
+        }
+
+        /* Scrollable main content area */
+        .content-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background-color: white;
+        }
+
+        /* "For [Pill]" Section */
+        .for-pill-container {
+            background-color: black;
+            border-radius: 12px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            cursor: pointer;
+        }
+        .for-label {
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .pill {
+            background-color: white;
+            color: #333;
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Ingredients Section */
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #333;
+        }
+        .ingredients-card {
+            background-color: #efefef;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        .ingredient-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+        .ingredient-item:last-child {
+            margin-bottom: 0;
+        }
+        /* Style the actual checkbox */
+        .ingredient-checkbox {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #555;
+            border-radius: 4px;
+            margin-right: 12px;
+            cursor: pointer;
+            position: relative;
+            background-color: white;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .ingredient-checkbox:checked {
+            background-color: black;
+            border-color: black;
+        }
+        /* Checkmark */
+        .ingredient-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 1px;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        .ingredient-label {
+            font-size: 16px;
+            color: #333;
+            flex-grow: 1;
+        }
+
+        /* Recommendation Section */
+        .recommendation-container {
+            margin-bottom: 24px;
+        }
+        .recipe-card {
+            background-color: #8c8c8c;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: opacity 0.2s, visibility 0.2s;
+            opacity: 0;
+            visibility: hidden;
+            display: none; /* Default to hidden */
+        }
+        .recipe-card.show {
+            opacity: 1;
+            visibility: visible;
+            display: flex; /* Show as flex when active */
+        }
+
+        .recipe-image-container {
+            width: 100px;
+            height: 100px;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .recipe-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Maintain aspect ratio */
+        }
+        .recipe-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .recipe-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        .recipe-description {
+            font-size: 14px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+<div class="phone-container">
+    <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-bar-icons">
+            <svg width="17" height="12" viewBox="0 0 17 12"><path fill="#333" d="M10.3 1.3C8.6.6 6.8 1 5.3 2.1 3.9 3.2 3.1 4.7 3.1 6.4c0 1.7.8 3.2 2.2 4.3 1.5 1.1 3.3 1.5 5 1.1s3.1-1.5 4-3c.9-1.5 1.1-3.3 1.1-5s-1.1-3.1-3-4zM10 10.3c-1.3.4-2.7.2-3.8-.6s-1.7-2-1.7-3.4c0-1.4.6-2.6 1.7-3.4 1.1-.8 2.5-1 3.8-.6s2.3 1.2 3 2.3 1 2.5 1 3.9c0 1.4-.4 2.7-1 3.8-.6 1.1-1.7 1.8-3 2.2zM15 6a.7.7 0 1 1-1.4 0 .7.7 0 0 1 1.4 0zm-13.3 0a.7.7 0 1 1 1.4 0 .7.7 0 0 1-1.4 0z"/></svg>
+            <svg width="15" height="11" viewBox="0 0 15 11"><path fill="#333" d="M13.2 0H1.8C.8 0 0 .8 0 1.8v7.4C0 10.2.8 11 1.8 11h11.4c1 0 1.8-.8 1.8-1.8V1.8C15 .8 14.2 0 13.2 0zM1 1.8C1 1.4 1.4 1 1.8 1h11.4c.4 0 .8.4.8.8v7.4c0 .4-.4.8-.8.8H1.8C1.4 10 1 9.6 1 9.2V1.8z"/></svg>
+            <svg width="17" height="11" viewBox="0 0 17 11"><path fill="#333" d="M16 0H1c-.6 0-1 .4-1 1v9c0 .6.4 1 1 1h15c.6 0 1-.4 1-1V1c0-.6-.4-1-1-1zm-.5 1.5v8c0 .3-.2.5-.5.5H2c-.3 0-.5-.2-.5-.5v-8c0-.3.2-.5.5-.5h13c.3 0 .5.2.5.5zm-11 5h1v1h-1v-1zm2 0h1v1h-1v-1zm2 0h1v1h-1v-1z"/></svg>
+        </div>
+    </div>
+
+    <div class="header">
+        <div class="header-left">
+            <button class="back-btn">&#8249;</button> </div>
+        <div class="app-title">Recommendation</div>
+        <button class="menu-btn">
+            <div class="menu-bar"></div>
+            <div class="menu-bar"></div>
+        </button>
+    </div>
+
+    <div class="content-area">
+        <div class="for-pill-container" id="levelFilter">
+            <span class="for-label">For</span>
+            <div class="pill">Beginner</div>
+        </div>
+
+        <div class="section-title">Ingredients I have</div>
+        <div class="ingredients-card">
+            <div id="ingredientList"></div>
+        </div>
+
+        <div class="section-title">Recipe Recommendations</div>
+        <div class="recommendation-container" id="recipeRecommendations">
+            </div>
+    </div>
+</div>
+
+<script>
+    // Data structures for the application
+    const ingredientsData = [
+        "Carrot", "Onion", "Tomato", "Pasta", "Water", "Salt", "Soy sauce"
+    ];
+
+    const recipesData = [
+        {
+            id: 'soup',
+            title: 'Tomato soup',
+            description: 'Simple, quick, and easy!',
+            level: 'Beginner',
+            // Image URLs are for example. Use absolute URLs or relative paths to local assets.
+            image: 'https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?q=80&w=300&auto=format&fit=crop',
+            keyIngredients: ['tomato', 'onion', 'water', 'salt']
+        },
+        {
+            id: 'burger',
+            title: 'Hamburger',
+            description: 'Perfect meal for you!',
+            level: 'Beginner',
+            image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=300&auto=format&fit=crop',
+            keyIngredients: ['hamburger bun', 'ground beef'] // Needs items we don't have
+        }
+    ];
+
+    // State management
+    let selectedIngredients = [];
+
+    // --- DOM Elements ---
+    const ingredientListElement = document.getElementById('ingredientList');
+    const recipeContainerElement = document.getElementById('recipeRecommendations');
+    const levelFilterElement = document.getElementById('levelFilter');
+
+    // --- Core Functions ---
+
+    // 1. Render the interactive ingredient list
+    function renderIngredients() {
+        ingredientListElement.innerHTML = ''; // Clear existing
+
+        ingredientsData.forEach(ingredient => {
+            const ingredientItem = document.createElement('label');
+            ingredientItem.className = 'ingredient-item';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'ingredient-checkbox';
+            checkbox.value = ingredient.toLowerCase();
+            // Start with all checked as per the Figma image
+            checkbox.checked = true; 
+            selectedIngredients.push(ingredient.toLowerCase());
+
+            const labelText = document.createElement('span');
+            labelText.className = 'ingredient-label';
+            labelText.textContent = ingredient;
+
+            // Handle checkbox change
+            checkbox.addEventListener('change', handleIngredientToggle);
+
+            ingredientItem.appendChild(checkbox);
+            ingredientItem.appendChild(labelText);
+            ingredientListElement.appendChild(ingredientItem);
+        });
+    }
+
+    // 2. Render all recipe cards (hidden by default)
+    function renderRecipeCards() {
+        recipeContainerElement.innerHTML = '';
+
+        recipesData.forEach(recipe => {
+            const card = document.createElement('div');
+            card.className = 'recipe-card';
+            card.id = `recipe-${recipe.id}`;
+
+            card.innerHTML = `
+                <div class="recipe-image-container">
+                    <img src="${recipe.image}" alt="${recipe.title}" class="recipe-image">
+                </div>
+                <div class="recipe-info">
+                    <h3 class="recipe-title">${recipe.title}</h3>
+                    <p class="recipe-description">${recipe.description}</p>
+                </div>
+            `;
+
+            // Make the whole card clickable for interaction
+            card.addEventListener('click', () => alert(`Opening details for ${recipe.title}`));
+
+            recipeContainerElement.appendChild(card);
+        });
+    }
+
+    // 3. Logic to show/hide recipes based on selected ingredients
+    function updateRecommendations() {
+        recipesData.forEach(recipe => {
+            const cardElement = document.getElementById(`recipe-${recipe.id}`);
+
+            // A recipe shows if *all* of its key ingredients are selected.
+            const canMake = recipe.keyIngredients.every(ing => selectedIngredients.includes(ing));
+
+            if (canMake) {
+                cardElement.classList.add('show');
+            } else {
+                cardElement.classList.remove('show');
+            }
+        });
+    }
+
+    // --- Event Handlers ---
+
+    function handleIngredientToggle(event) {
+        const value = event.target.value;
+        if (event.target.checked) {
+            // Add if checked
+            if (!selectedIngredients.includes(value)) {
+                selectedIngredients.push(value);
+            }
+        } else {
+            // Remove if unchecked
+            selectedIngredients = selectedIngredients.filter(ing => ing !== value);
+        }
+        updateRecommendations(); // Re-filter recipes
+    }
+
+    // Example interaction: click "Beginner" pill
+    levelFilterElement.addEventListener('click', () => {
+        alert("You clicked the difficulty level. This could open a filter panel.");
+    });
+
+    // --- Initialization ---
+    function init() {
+        renderIngredients();
+        renderRecipeCards();
+        updateRecommendations(); // Initial run to show matches based on the initial checked state
+    }
+
+    init(); // Start the app
+</script>
+
+</body>
+</html>
